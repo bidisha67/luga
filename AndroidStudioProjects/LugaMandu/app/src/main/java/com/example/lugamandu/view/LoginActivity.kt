@@ -128,13 +128,8 @@ fun LoginBody() {
                 } else {
                     userViewModel.login(email, password) { success, message ->
                         if (success) {
-                            val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-                            if (firebaseUser?.isEmailVerified == true) {
-                                context.startActivity(Intent(context, DashboardActivity::class.java))
-                                activity.finish()
-                            } else {
-                                Toast.makeText(context, "Please verify your email via Gmail first.", Toast.LENGTH_LONG).show()
-                            }
+                            context.startActivity(Intent(context, DashboardActivity::class.java))
+                            activity.finish()
                         } else {
                             Toast.makeText(context, "Login Failed: $message", Toast.LENGTH_LONG).show()
                         }

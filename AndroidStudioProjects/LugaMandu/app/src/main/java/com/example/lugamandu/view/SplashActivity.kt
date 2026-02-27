@@ -44,10 +44,13 @@ fun SplashBody() {
     val context= LocalContext.current
     val activity= context as Activity
     LaunchedEffect(Unit) {
+        // Hold the splash screen for 3 seconds to show branding
         delay(3000)
+        // Navigate to LoginActivity
         val intent= Intent(context,
             LoginActivity::class.java)
         context.startActivity(intent)
+        // Remove SplashActivity from the backstack so the user can't navigate back to it
         activity.finish()
     }
 
@@ -67,7 +70,6 @@ fun SplashBody() {
             )
             Spacer(modifier = Modifier.height(100.dp))
             CircularProgressIndicator(
-
             )
         }
     }

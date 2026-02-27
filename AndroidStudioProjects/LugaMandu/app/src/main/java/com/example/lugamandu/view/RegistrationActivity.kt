@@ -1,3 +1,5 @@
+package com.example.lugamandu.view
+
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -232,20 +234,6 @@ fun RegisterBody() {
                                         model
                                     ) { dbSuccess, dbMessage ->
                                         if (dbSuccess) {
-                                            // --- SEND REAL VERIFICATION EMAIL ---
-                                            val firebaseUser =
-                                                FirebaseAuth.getInstance().currentUser
-                                            firebaseUser?.sendEmailVerification()
-                                                ?.addOnCompleteListener { task ->
-                                                    if (task.isSuccessful) {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Verification email sent to $email",
-                                                            Toast.LENGTH_LONG
-                                                        ).show()
-                                                    }
-                                                }
-
                                             Toast.makeText(
                                                 context,
                                                 "Registration Successful!",
