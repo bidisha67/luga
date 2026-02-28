@@ -75,7 +75,7 @@ fun LoginBody() {
         Spacer(modifier = Modifier.height(80.dp))
 
         Text(
-            text = "Postify",
+            text = "LugaMandu",
             style = TextStyle(fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Blue)
         )
 
