@@ -1,5 +1,6 @@
 package com.example.lugamandu.view.admin
 
+// Imports
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -33,6 +34,7 @@ import com.example.lugamandu.viewmodel.ReviewViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Custom colors
 val Blue = Color(0xFF2196F3)
 val LightBlue = Color(0xFFE3F2FD)
 val SoftGray = Color(0xFFF5F7FA)
@@ -45,14 +47,17 @@ fun AdminDashboardScreen(
     orderViewModel: OrderViewModel,
     reviewViewModel: ReviewViewModel
 ) {
+    // Track selected tab index
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Products", "Orders", "Reviews")
 
+    // Scaffold layout with top bar and floating action button
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text("LUGA MANDU ADMIN",
+                    Text(
+                        "LUGA MANDU ADMIN",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 2.sp
@@ -62,6 +67,7 @@ fun AdminDashboardScreen(
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Blue),
                 actions = {
+                    // Logout button
                     IconButton(onClick = {
                         com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
                         navController.navigate("login") { popUpTo(0) }
@@ -72,6 +78,7 @@ fun AdminDashboardScreen(
             )
         },
         floatingActionButton = {
+            // Only show FAB on Products tab
             if (selectedTab == 0) {
                 ExtendedFloatingActionButton(
                     onClick = {
@@ -86,7 +93,13 @@ fun AdminDashboardScreen(
             }
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize().background(SoftGray)) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .background(SoftGray)
+        ) {
+            // Tab row for Products, Orders, Reviews
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.White,
@@ -104,12 +117,16 @@ fun AdminDashboardScreen(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
                         text = {
-                            Text(title, fontWeight = if(selectedTab == index) FontWeight.Bold else FontWeight.Normal)
+                            Text(
+                                title,
+                                fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                            )
                         }
                     )
                 }
             }
 
+            // Display content based on selected tab
             when (selectedTab) {
                 0 -> AdminProductsScreen(navController, productViewModel)
                 1 -> AdminOrdersScreen(orderViewModel)
@@ -119,44 +136,53 @@ fun AdminDashboardScreen(
     }
 }
 
+// ------------------- Reviews Screen -------------------
 @Composable
 fun AdminReviewScreen(viewModel: ReviewViewModel) {
     val reviews by viewModel.reviews.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val context = LocalContext.current
 
+    // Fetch reviews on first composition
     LaunchedEffect(Unit) { viewModel.fetchAllReviews() }
 
+    // Variables for delete dialog
     var showDeleteReviewDialog by remember { mutableStateOf(false) }
     var reviewToDelete by remember { mutableStateOf<ReviewModel?>(null) }
 
+    // Delete review dialog
     if (showDeleteReviewDialog && reviewToDelete != null) {
         AlertDialog(
             onDismissRequest = { showDeleteReviewDialog = false },
             title = { Text("Purge Feedback") },
             text = { Text("Remove the review from ${reviewToDelete?.userName} permanently?") },
             confirmButton = {
-                Button(onClick = {
-                    reviewToDelete?.let { review ->
-                        viewModel.deleteReview(review.reviewId) { success ->
-                            if (success) Toast.makeText(context, "Review Removed", Toast.LENGTH_SHORT).show()
-                            viewModel.fetchAllReviews()
+                Button(
+                    onClick = {
+                        reviewToDelete?.let { review ->
+                            viewModel.deleteReview(review.reviewId) { success ->
+                                if (success) Toast.makeText(context, "Review Removed", Toast.LENGTH_SHORT).show()
+                                viewModel.fetchAllReviews()
+                            }
                         }
-                    }
-                    showDeleteReviewDialog = false
-                }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
-                    Text("Delete", color = Color.White)
-                }
+                        showDeleteReviewDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) { Text("Delete", color = Color.White) }
             },
-            dismissButton = { TextButton(onClick = { showDeleteReviewDialog = false }) { Text("Cancel") } }
+            dismissButton = {
+                TextButton(onClick = { showDeleteReviewDialog = false }) { Text("Cancel") }
+            }
         )
     }
 
+    // Show loading indicator
     if (loading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = Blue)
         }
     } else {
+        // Display list of reviews
         LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
             items(reviews) { review ->
@@ -168,12 +194,17 @@ fun AdminReviewScreen(viewModel: ReviewViewModel) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(LightBlue), contentAlignment = Alignment.Center) {
+                            // User avatar circle with first letter
+                            Box(
+                                modifier = Modifier.size(40.dp).clip(CircleShape).background(LightBlue),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Text(review.userName.take(1).uppercase(), color = Blue, fontWeight = FontWeight.Bold)
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(review.userName, fontWeight = FontWeight.Bold)
+                                // Display stars for rating
                                 Row {
                                     repeat(5) { index ->
                                         Icon(
@@ -184,6 +215,7 @@ fun AdminReviewScreen(viewModel: ReviewViewModel) {
                                     }
                                 }
                             }
+                            // Delete button
                             IconButton(
                                 onClick = { reviewToDelete = review; showDeleteReviewDialog = true },
                                 modifier = Modifier.background(Color(0xFFFFEBEE), CircleShape).size(32.dp)
@@ -192,6 +224,7 @@ fun AdminReviewScreen(viewModel: ReviewViewModel) {
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
+                        // Comment box
                         Surface(color = SoftGray, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = "\"${review.comment}\"",
@@ -200,6 +233,7 @@ fun AdminReviewScreen(viewModel: ReviewViewModel) {
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
+                        // Product ID
                         Text("PID: ${review.productId}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     }
                 }
@@ -208,6 +242,7 @@ fun AdminReviewScreen(viewModel: ReviewViewModel) {
     }
 }
 
+// ------------------- Products Screen -------------------
 @Composable
 fun AdminProductsScreen(navController: NavController, viewModel: ProductViewModel) {
     val products by viewModel.products.collectAsState()
@@ -217,22 +252,24 @@ fun AdminProductsScreen(navController: NavController, viewModel: ProductViewMode
     var showDeleteProductDialog by remember { mutableStateOf(false) }
     var productToDelete by remember { mutableStateOf<ProductModel?>(null) }
 
+    // Delete product dialog
     if (showDeleteProductDialog && productToDelete != null) {
         AlertDialog(
             onDismissRequest = { showDeleteProductDialog = false },
             title = { Text("Delete Product") },
             text = { Text("Confirm removal of '${productToDelete?.name}'?") },
             confirmButton = {
-                Button(onClick = {
-                    productToDelete?.let { product ->
-                        viewModel.deleteProduct(product.id) { success ->
-                            if(success) Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show()
+                Button(
+                    onClick = {
+                        productToDelete?.let { product ->
+                            viewModel.deleteProduct(product.id) { success ->
+                                if(success) Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show()
+                            }
                         }
-                    }
-                    showDeleteProductDialog = false
-                }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
-                    Text("Remove")
-                }
+                        showDeleteProductDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) { Text("Remove") }
             },
             dismissButton = { TextButton(onClick = { showDeleteProductDialog = false }) { Text("Cancel") } }
         )
@@ -262,6 +299,7 @@ fun AdminProductsScreen(navController: NavController, viewModel: ProductViewMode
     }
 }
 
+// ------------------- Product Item -------------------
 @Composable
 fun ProductAdminItem(product: ProductModel, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
@@ -271,6 +309,7 @@ fun ProductAdminItem(product: ProductModel, onEdit: () -> Unit, onDelete: () -> 
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            // Product image
             AsyncImage(
                 model = product.imageUrl,
                 contentDescription = null,
@@ -283,10 +322,12 @@ fun ProductAdminItem(product: ProductModel, onEdit: () -> Unit, onDelete: () -> 
                 Text("Rs ${product.price}", color = Blue, fontWeight = FontWeight.Bold)
                 Text("ID: ${product.id.take(8)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
+            // Edit button
             IconButton(onClick = onEdit, modifier = Modifier.background(LightBlue, CircleShape).size(36.dp)) {
                 Icon(Icons.Filled.Edit, null, tint = Blue, modifier = Modifier.size(20.dp))
             }
             Spacer(modifier = Modifier.width(8.dp))
+            // Delete button
             IconButton(onClick = onDelete, modifier = Modifier.background(Color(0xFFFFEBEE), CircleShape).size(36.dp)) {
                 Icon(Icons.Filled.Delete, null, tint = Color.Red, modifier = Modifier.size(20.dp))
             }
@@ -294,6 +335,7 @@ fun ProductAdminItem(product: ProductModel, onEdit: () -> Unit, onDelete: () -> 
     }
 }
 
+// ------------------- Orders Screen -------------------
 @Composable
 fun AdminOrdersScreen(viewModel: OrderViewModel) {
     LaunchedEffect(Unit) { viewModel.fetchAllOrders() }
@@ -306,6 +348,7 @@ fun AdminOrdersScreen(viewModel: OrderViewModel) {
         }
     } else {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            // Pending tasks count
             Surface(color = LightBlue, shape = RoundedCornerShape(12.dp)) {
                 Text(
                     "PENDING TASKS: ${orders.filter { it.status.lowercase() == "pending" }.size}",
@@ -315,6 +358,7 @@ fun AdminOrdersScreen(viewModel: OrderViewModel) {
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
+            // Display all orders
             LazyColumn {
                 items(orders) { order -> OrderAdminItem(order, viewModel) }
             }
@@ -322,6 +366,7 @@ fun AdminOrdersScreen(viewModel: OrderViewModel) {
     }
 }
 
+// ------------------- Single Order Item -------------------
 @Composable
 fun OrderAdminItem(order: OrderModel, viewModel: OrderViewModel) {
     val context = LocalContext.current
@@ -348,23 +393,25 @@ fun OrderAdminItem(order: OrderModel, viewModel: OrderViewModel) {
                     )
                 }
             }
-
             Text("Total: Rs ${order.totalAmount}", color = Blue, fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
-            // FIX: Replaced 'alpha' with color copy method for M3 HorizontalDivider compatibility
+            // Divider
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 12.dp),
                 thickness = 1.dp,
                 color = Color.Gray.copy(alpha = 0.1f)
             )
 
+            // Items in order
             order.items.forEach { item ->
                 Text("• ${item.productId} (x${item.quantity})", style = MaterialTheme.typography.bodySmall)
             }
 
+            // Order timestamp
             val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
             Text(sdf.format(Date(order.timestamp)), color = Color.Gray, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp))
 
+            // Button to mark order as complete
             if (isPending) {
                 Button(
                     onClick = {
